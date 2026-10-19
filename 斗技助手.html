@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>阴阳师斗技助手</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f5f7;color:#222;font-size:15px}
+.hidden{display:none!important}
+header{background:#1f2937;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:20px;position:sticky;top:0;z-index:20}
+header h1{font-size:17px;font-weight:600;white-space:nowrap}
+header .our-ban{font-size:13px;background:#7c2d12;color:#fdba74;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.tabs{display:flex;gap:8px;margin-left:auto}
+.tabs button{background:#374151;color:#ddd;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:14px}
+.tabs button.active{background:#3b82f6;color:#fff}
+main{max-width:1100px;margin:16px auto;padding:0 12px 60px}
+.panel{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;margin-bottom:14px}
+.row{display:flex;align-items:center;gap:10px;margin:8px 0;flex-wrap:wrap}
+.label{font-weight:600;color:#555;white-space:nowrap}
+.muted{color:#888;font-size:13px}
+.danger{color:#b91c1c}
+
+/* 通用 chip */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:14px;border:1px solid #d1d5db;background:#f9fafb;cursor:pointer;font-size:14px;user-select:none}
+.chip:hover{border-color:#9ca3af}
+.chip .x{color:#999;font-weight:700;margin-left:2px}
+.chip .x:hover{color:#c62828}
+.chip.mark-green{background:#e8f5e9;border-color:#66bb6a;color:#1b5e20}
+.chip.mark-red{background:#ffebee;border-color:#ef5350;color:#b71c1c}
+.chip.mark-none{background:#f3f4f6;border-color:#d1d5db;color:#6b7280}
+.chip.mark-void{background:#fafafa;border-style:dashed;color:#9ca3af}
+.chip.ban-chip{background:#e0e7ff;border-color:#818cf8;color:#3730a3;font-weight:600}
+.chip.dim{opacity:.35}
+
+/* 对局页 */
+.ban-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ban-btns button{border:1px solid #cbd5e1;background:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.ban-btns button.on{background:#3730a3;color:#fff;border-color:#3730a3}
+.ban-other-in{width:130px;padding:6px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px}
+.search-wrap{position:relative;flex:1;min-width:280px}
+#search{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px;outline:none}
+#search:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.15)}
+.suggest{position:absolute;top:42px;left:0;right:0;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);z-index:15;max-height:260px;overflow:auto}
+.suggest .item{padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+.suggest .item.sel{background:#eff6ff}
+.suggest .item .alias{color:#999;font-size:13px}
+.tools button{padding:6px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:14px}
+.tools button:hover{background:#f3f4f6}
+
+/* 结果区 */
+.banner{padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:14px}
+.banner.ok{background:#eef7ee;border:1px solid #b7dfb9;color:#1b5e20}
+.banner.warn{background:#fff8e1;border:1px solid #ffe082;color:#7c5800}
+.banner.err{background:#ffebee;border:1px solid #f8bbd0;color:#b71c1c}
+.group-title{font-weight:700;margin:14px 0 8px;color:#374151;display:flex;align-items:center;gap:8px}
+.group-title .count{font-size:12px;background:#e5e7eb;border-radius:10px;padding:1px 8px;color:#555}
+.cond-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.cond-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.cond-head .cname{font-weight:700;font-size:16px}
+.cond-head .cnote{color:#888;font-size:13px}
+.progress{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:1px 8px}
+.resp{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #f0f0f0}
+.resp:first-of-type{border-top:none}
+.resp .pick-label{color:#888;font-size:13px}
+.resp .rnote{color:#b45309;font-size:13px;background:#fffbeb;border-radius:8px;padding:2px 8px}
+.resp .rtag{color:#065f46;font-size:12px;background:#d1fae5;border-radius:8px;padding:2px 8px}
+.resp-blocked{opacity:.3}
+.noresult{padding:20px;text-align:center;color:#999}
+.details{font-size:13px;color:#2563eb;cursor:pointer;margin-left:6px}
+
+/* 弹窗 */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:center;justify-content:center;padding:20px}
+#modal-box{background:#fff;border-radius:12px;max-width:520px;width:100%;max-height:80vh;overflow:auto;padding:18px 20px}
+#modal-box h3{font-size:17px;margin-bottom:6px}
+#modal-box .aliases{color:#888;font-size:13px;margin-bottom:12px}
+.modal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.modal-actions button{padding:6px 14px;border-radius:8px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;font-size:14px}
+.modal-actions button.on-green{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.modal-actions button.on-red{background:#c62828;border-color:#c62828;color:#fff}
+.build-item{border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;margin:8px 0;font-size:14px}
+.build-item .b-copy{font-size:12px;color:#fff;background:#6b7280;border-radius:8px;padding:1px 8px;margin-right:6px}
+.build-item .b-line{margin:3px 0;color:#333}
+.build-item .b-line b{color:#555;font-weight:600}
+.nobuild{color:#999;font-size:14px;padding:10px 0}
+.mark-note{width:100%;margin-top:8px;padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px}
+
+/* 管理页 */
+.subtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.subtabs button{border:1px solid #cbd5e1;background:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.subtabs button.active{background:#1f2937;color:#fff;border-color:#1f2937}
+table.grid{width:100%;border-collapse:collapse;font-size:14px}
+table.grid th{background:#f9fafb;text-align:left;padding:8px 10px;border-bottom:2px solid #e5e7eb;color:#555;font-weight:600}
+table.grid td{padding:6px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+table.grid input[type=text]{width:100%;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+.btn{border:1px solid #cbd5e1;background:#fff;padding:6px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+.btn:hover{background:#f3f4f6}
+.btn.primary{background:#1f2937;color:#fff;border-color:#1f2937}
+.btn.danger{color:#b91c1c;border-color:#fecaca}
+.btn.sm{padding:3px 10px;font-size:13px}
+.tree-sec{border:2px solid #1f2937;border-radius:10px;padding:12px;margin-bottom:16px;background:#fbfbfc}
+.tree-sec .sec-head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.tree-sec .sec-head input{padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px}
+.tree-sec .sec-head select{padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:14px}
+.tree-cond{border:1px dashed #cbd5e1;border-radius:8px;padding:10px;margin:8px 0;background:#fff}
+.tree-cond .cond-head2{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.tree-cond input{padding:6px 10px;border:1px solid #e5e7eb;border-radius:6px;font-size:14px}
+.tree-resp{border-left:3px solid #93c5fd;background:#f8fafc;border-radius:0 8px 8px 0;padding:8px 10px;margin:6px 0}
+.tree-resp .resp-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0}
+.chipfield{display:inline-flex;align-items:center;gap:5px;flex-wrap:wrap}
+.chipfield .add-btn{border:1px dashed #9ca3af;background:#fff;color:#6b7280;border-radius:14px;padding:3px 10px;cursor:pointer;font-size:13px}
+.chipfield .add-btn:hover{color:#1f2937;border-color:#1f2937}
+.chipfield .cf-in{width:120px;padding:4px 8px;border:1px solid #3b82f6;border-radius:6px;font-size:13px;outline:none}
+.chipfield .cf-list{position:absolute;background:#fff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);z-index:15;max-height:220px;overflow:auto;min-width:150px}
+.cf-wrap{position:relative;display:inline-block}
+.memo{width:100%;min-height:200px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:14px;font-family:inherit;line-height:1.7}
+.hint-box{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:10px 14px;font-size:13px;color:#075985;margin-bottom:12px;line-height:1.7}
+.stat-btn{border:1px solid #d1d5db;background:#f9fafb;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:13px}
+.stat-btn.sel-green{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.stat-btn.sel-red{background:#c62828;color:#fff;border-color:#c62828}
+.mark-note-in{width:200px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;font-size:13px}
+.unit-pick{display:flex;gap:6px;flex-wrap:wrap;max-width:320px}
+.unit-pick button{border:1px solid #e5e7eb;background:#fff;padding:3px 10px;border-radius:14px;cursor:pointer;font-size:13px;color:#555}
+.unit-pick button.on{background:#3730a3;color:#fff;border-color:#3730a3}
+</style>
+</head>
+<body>
+<header>
+  <h1>阴阳师斗技助手</h1>
+  <span class="our-ban">我方固定ban葛叶（不配御魂）</span>
+  <div class="tabs">
+    <button data-tab="match" class="active">对局推荐</button>
+    <button data-tab="manage">数据管理</button>
+  </div>
+</header>
+<main>
+  <section id="tab-match"></section>
+  <section id="tab-manage" class="hidden"></section>
+</main>
+<div id="modal-overlay" class="hidden">
+  <div id="modal-box"></div>
+</div>
+
+<script>
+/* ===================== 数据 ===================== */
+var LS_KEY = 'yyy_dj_helper_v1';
+
+var INITIAL = {
+  v: 1,
+  meta: {
+    strategy: 'ban葛叶低配封狐（2头1尾可玩）',
+    ourBan: 'gx',
+    updated: '2026-08-20',
+    memo: [
+      '我方固定ban葛叶；葛叶不配御魂（御魂拆给其他式神）。',
+      '暗ban规则：被ban式神双方都不可上阵；敌方ban葛=常规局（对方浪费ban位），ban封=基本掏云熊，ban平=基本掏思铃。',
+      '速度链：阎魔(一速) > 猫川(卡阎) > 摩托(>157) > 毗沙门天 > 神无月(=毗×0.7)；不相狐禅 > 封。',
+      '攻击链：SP吸血姬 > 不相狐禅；鬼童丸 < SP吸血姬；吞 < 封。',
+      '换阵容流程：编辑御魂要求 → 到「红绿标记」清空全部标记 → 重新逐式神标红绿 → 导出备份。'
+    ].join('\n')
+  },
+  units: [
+    {id:'gx',    name:'葛叶',         aliases:['葛'],                    py:'gy'},
+    {id:'huchan',name:'不相狐禅',     aliases:['狐'],                    py:'bxhc'},
+    {id:'ym',    name:'阎魔',         aliases:['阎'],                    py:'ym'},
+    {id:'fyj',   name:'封阳君',       aliases:['封'],                    py:'fyj'},
+    {id:'mt',    name:'SP大夜摩天阎魔',aliases:['摩托','sp阎','大夜摩天阎魔'], py:'dymtym'},
+    {id:'pst',   name:'毗沙门天',     aliases:['毗'],                    py:'psmt'},
+    {id:'gq',    name:'SP鬼切',       aliases:['切','奶切','小奶切'],    py:'gq'},
+    {id:'xxj',   name:'SP吸血姬',     aliases:['吸','吸血姬'],           py:'xxj'},
+    {id:'pjm',   name:'平将门',       aliases:['平'],                    py:'pjm'},
+    {id:'mc',    name:'猫川',         aliases:['猫'],                    py:'mc'},
+    {id:'gtw',   name:'鬼童丸',       aliases:['鬼'],                    py:'gtw'},
+    {id:'ydj',   name:'UR妖刀姬',     aliases:['ur刀','UR刀','妖刀'],    py:'ydj'},
+    {id:'lj',    name:'龙珏',         aliases:['龙女','龙'],             py:'lj'},
+    {id:'jmm',   name:'SP九命猫',     aliases:['九命猫','sp猫','SP猫'],  py:'jmm'},
+    {id:'hy',    name:'SP红叶',       aliases:['叶','红叶'],             py:'hy'},
+    {id:'hkl',   name:'荒骷髅',       aliases:['骷髅','骷'],             py:'hkl'},
+    {id:'dst',   name:'帝释天',       aliases:['帝'],                    py:'dst'},
+    {id:'jttz',  name:'酒吞童子',     aliases:['吞'],                    py:'jttz'},
+    {id:'yml',   name:'一目连',       aliases:['一目'],                  py:'yml'},
+    {id:'bzh',   name:'不知火',       aliases:['离'],                    py:'bzh'},
+    {id:'hjs',   name:'祸津神',       aliases:['祸'],                    py:'hjs'},
+    {id:'bcz',   name:'SP白藏主',     aliases:['sp白','SP白','白藏主'],  py:'bcz'},
+    {id:'thy',   name:'桃花妖',       aliases:['桃','桃花'],             py:'thy'},
+    {id:'l',     name:'泷',           aliases:[],                        py:'l'},
+    {id:'jyj',   name:'SP金鱼姬',     aliases:['金','金鱼姬'],           py:'jyj'},
+    {id:'kqmw',  name:'孔雀明王',     aliases:['孔','孔雀'],             py:'kqmw'},
+    {id:'lmdyw', name:'麓铭大岳丸',   aliases:['鹿丸'],                  py:'lmdyw'},
+    {id:'swy',   name:'神无月',       aliases:['神'],                    py:'swy'},
+    {id:'sjs',   name:'思金神',       aliases:['思'],                    py:'sjs'},
+    {id:'yl',    name:'言灵',         aliases:[],                        py:'yl'},
+    {id:'xln',   name:'小鹿男',       aliases:['小鹿'],                  py:'xln'},
+    {id:'yyl',   name:'烟烟罗',       aliases:[],                        py:'yyl'},
+    {id:'xxtz',  name:'SP星熊童子',   aliases:['熊','星熊'],             py:'xxtz'},
+    {id:'ywj',   name:'云外镜',       aliases:['云'],                    py:'ywj'},
+    {id:'cxywj', name:'SP禅心云外镜', aliases:['禅','禅心云外镜'],       py:'cxywj'},
+    {id:'dyxs',  name:'独眼小僧',     aliases:['小僧'],                  py:'dyxs'},
+    {id:'rnq',   name:'入内雀',       aliases:['雀'],                    py:'rnq'},
+    {id:'bah',   name:'彼岸花',       aliases:[],                        py:'bah'},
+    {id:'huang', name:'荒',           aliases:[],                        py:'h'},
+    {id:'gjy',   name:'鬼金羊',       aliases:['羊'],                    py:'gjy'},
+    {id:'sjm',   name:'市佳美',       aliases:['市'],                    py:'sjm'},
+    {id:'lyj',   name:'SP铃彦姬',     aliases:['铃','铃彦姬'],           py:'lyj'},
+    {id:'yd',    name:'月读',         aliases:[],                        py:'yd'}
+  ],
+  builds: {
+    'gx': [],
+    'huchan':[{copy:'', souls:'火灵/招财/散件', attrs:'速攻攻', targets:'跑封（速度>封）', note:''}],
+    'ym':[
+      {copy:'', souls:'念火/招财', attrs:'速xx', targets:'一速', note:''},
+      {copy:'2号机', souls:'散件', attrs:'速xx', targets:'159+可做', note:''}
+    ],
+    'fyj':[{copy:'', souls:'控制套', attrs:'速命生', targets:'4号位效果命中', note:'控制类'}],
+    'mt':[{copy:'', souls:'—', attrs:'速命生', targets:'速度>157', note:'控制类'}],
+    'pst':[{copy:'', souls:'共潜', attrs:'速生 / 抗生', targets:'', note:'两种方案'}],
+    'gq':[
+      {copy:'', souls:'蚌精', attrs:'速攻攻', targets:'', note:''},
+      {copy:'2号机', souls:'薙魂', attrs:'', targets:'', note:''}
+    ],
+    'xxj':[{copy:'', souls:'伤魂鸟', attrs:'攻攻暴', targets:'速度130；攻击>不相狐禅', note:''}],
+    'pjm':[
+      {copy:'', souls:'网切', attrs:'—', targets:'超星；防御形态', note:''},
+      {copy:'2号机', souls:'薙魂', attrs:'—', targets:'', note:''}
+    ],
+    'mc':[{copy:'', souls:'狂骨', attrs:'速攻暴', targets:'速度卡在阎魔之后', note:''}],
+    'gtw':[{copy:'', souls:'网切', attrs:'攻攻暴', targets:'速度130；攻击<SP吸血姬', note:''}],
+    'ydj':[{copy:'', souls:'针女', attrs:'速攻爆', targets:'速度197+', note:'UR稀有度，全游唯一'}],
+    'lj':[{copy:'', souls:'片叶/破势', attrs:'速攻爆', targets:'速度195+', note:'输出+生存'}],
+    'jmm':[{copy:'', souls:'尘冢 或 伤魂鸟', attrs:'攻抗爆', targets:'超星；抵抗200+', note:''}],
+    'hy':[{copy:'', souls:'应声虫', attrs:'攻攻暴', targets:'超星', note:''}],
+    'hkl':[
+      {copy:'', souls:'木魅', attrs:'速生生', targets:'速度185', note:'本体系只作保护+木魅骚扰'},
+      {copy:'2号机', souls:'隐念', attrs:'', targets:'', note:''},
+      {copy:'3号机', souls:'地藏', attrs:'', targets:'', note:''}
+    ],
+    'dst':[{copy:'', souls:'油赤子', attrs:'速生 / 命生', targets:'指标：速度', note:''}],
+    'jttz':[
+      {copy:'油赤子版', souls:'油赤子(4)+防御2件套', attrs:'速生生', targets:'速度215；攻击<封', note:''},
+      {copy:'地藏版', souls:'地藏(4)+防御2件套', attrs:'速生生', targets:'速度205；攻击<封', note:''}
+    ],
+    'yml':[
+      {copy:'', souls:'油赤子', attrs:'生生暴', targets:'指标：治疗；超星', note:''},
+      {copy:'2号机', souls:'蚌精', attrs:'', targets:'', note:''}
+    ],
+    'bzh':[
+      {copy:'', souls:'油赤子(4)+防御2件套', attrs:'生生生', targets:'指标：生命', note:''},
+      {copy:'2号机', souls:'蚌精', attrs:'生生暴', targets:'指标：治疗', note:''}
+    ],
+    'hjs':[{copy:'', souls:'蚌精/薙魂', attrs:'生生暴', targets:'治疗量；超星', note:''}],
+    'bcz':[{copy:'', souls:'蚌精', attrs:'生生爆', targets:'治疗量；速度140', note:''}],
+    'thy':[
+      {copy:'', souls:'地藏', attrs:'速生暴', targets:'治疗量；满暴击；速度200；抵抗50', note:''},
+      {copy:'2号机', souls:'青女房', attrs:'', targets:'', note:''}
+    ],
+    'l':[
+      {copy:'', souls:'招财', attrs:'速防防', targets:'防御指标；速度240；暴击40', note:''},
+      {copy:'2号机', souls:'蚌精', attrs:'生生爆', targets:'治疗量；满暴击', note:''}
+    ],
+    'jyj':[{copy:'', souls:'木魅', attrs:'速攻生', targets:'攻击指标；速度240', note:''}],
+    'kqmw':[{copy:'', souls:'海图', attrs:'速命生', targets:'速度230', note:''}],
+    'lmdyw':[{copy:'', souls:'钟灵', attrs:'速命生', targets:'速度255', note:''}],
+    'swy':[{copy:'', souls:'轮入道', attrs:'速抗生', targets:'速度=毗沙门天速度×0.7', note:''}],
+    'sjs':[{copy:'', souls:'钟灵', attrs:'速命生', targets:'速度210', note:''}],
+    'yl':[{copy:'', souls:'钟灵', attrs:'速命生', targets:'速度230', note:''}],
+    'xln':[{copy:'', souls:'招财', attrs:'速生生', targets:'', note:''}],
+    'yyl':[{copy:'', souls:'钟灵', attrs:'速命生', targets:'速度240', note:''}],
+    'xxtz':[{copy:'', souls:'共潜', attrs:'生命生', targets:'速度150', note:'骚扰/控制卡'}],
+    'ywj':[
+      {copy:'', souls:'共潜', attrs:'速生防', targets:'速度230', note:''},
+      {copy:'2号机', souls:'青女房', attrs:'', targets:'', note:''}
+    ],
+    'dyxs':[{copy:'', souls:'薙魂', attrs:'速抗生', targets:'指标：抵抗', note:''}],
+    'rnq':[{copy:'', souls:'木魅 或 油赤子', attrs:'防防防', targets:'', note:'两种四件套方案'}],
+    'bah':[{copy:'', souls:'钟灵', attrs:'速命生', targets:'', note:''}],
+    'cxywj':[], 'huang':[], 'gjy':[], 'sjm':[], 'lyj':[], 'yd':[]
+  },
+  marks: {},
+  tree: { sections: [
+    {id:'s1', ban:'gx', title:'打ban葛', note:'敌方ban了我方葛叶（常规局，对方浪费ban位）', conditions:[
+      {id:'c1', name:'离封狐', units:['bzh','fyj','huchan'], note:'镜像局：不知火+封阳君+不相狐禅', responses:[
+        {id:'r1', units:['bzh','fyj','huchan','hkl','xxj'], pick:[], note:'摆烂打法', tags:['摆烂打法']},
+        {id:'r2', units:['bzh','fyj','huchan','gtw','hy'], pick:[], note:'', tags:[]},
+        {id:'r3', units:['bzh','fyj','huchan','gq','jyj'], pick:[], note:'', tags:[]},
+        {id:'r4', units:['bzh','fyj','huchan','dst','gq'], pick:[], note:'', tags:[]},
+        {id:'r5', units:['bzh','fyj','huchan','ym','mc'], pick:[], note:'摆烂打法', tags:['摆烂打法']}
+      ]},
+      {id:'c2', name:'神狐毗', units:['swy','huchan','pst'], note:'神无月+不相狐禅+毗沙门天', responses:[
+        {id:'r6', units:['bzh','fyj','huchan','pst'], pick:['gtw','huang','xxtz','lmdyw'], note:'第四位四选一：鬼/荒/熊/鹿丸', tags:[]},
+        {id:'r7', units:['bzh','fyj','huchan','pst','thy'], pick:[], note:'', tags:[]}
+      ]},
+      {id:'c3', name:'神龙平', units:['swy','lj','pjm'], note:'神无月打火+增伤，龙珏输出+减防，平将门收尾', responses:[
+        {id:'r8', units:['bzh','fyj','huchan','ym','mc'], pick:[], note:'', tags:[]}
+      ]},
+      {id:'c4', name:'挖土', units:[], note:'敌方抢一速、输出抢先出手使我方快速减员的速攻体系', responses:[
+        {id:'r9', units:['bzh','huchan','sjm','l','rnq'], pick:[], note:'应对挖土的上卡策略', tags:[]},
+        {id:'r10', units:['bzh','fyj','huchan','ym','mc'], pick:[], note:'', tags:[]}
+      ]},
+      {id:'c5', name:'禅羊', units:['cxywj','gjy'], note:'SP禅心云外镜+鬼金羊', responses:[
+        {id:'r11', units:['huchan','pst','xxj','hkl'], pick:['ym','yd'], note:'阎/月读 二选一', tags:[]}
+      ]}
+    ]},
+    {id:'s2', ban:'fyj', title:'打ban封', note:'敌方ban了我方封阳君，基本要掏云熊', conditions:[
+      {id:'c6', name:'云熊', units:['ywj','xxtz'], note:'云外镜+星熊童子', responses:[
+        {id:'r12', units:['huchan','pst','swy','ym','jmm'], pick:[], note:'', tags:[]},
+        {id:'r13', units:['huchan','pst','bzh','gtw','mc'], pick:[], note:'', tags:[]}
+      ]}
+    ]},
+    {id:'s3', ban:'pjm', title:'打ban平', note:'敌方ban了我方平将门，基本要掏思铃', conditions:[
+      {id:'c7', name:'思铃', units:['sjs','lyj'], note:'思金神+SP铃彦姬', responses:[
+        {id:'r14', units:['huchan','kqmw','hkl','xxj'], pick:['jttz','dst'], note:'吞/帝 二选一', tags:[]}
+      ]}
+    ]}
+  ]},
+  settings: { greenOnly: false }
+};
+
+/* ===================== 存储 ===================== */
+function loadDB(){
+  try{
+    var s = localStorage.getItem(LS_KEY);
+    if(s){
+      var d = JSON.parse(s);
+      if(d && d.v === 1) return d;
+    }
+  }catch(e){}
+  return JSON.parse(JSON.stringify(INITIAL));
+}
+function saveDB(){ localStorage.setItem(LS_KEY, JSON.stringify(DB)); }
+
+var DB = loadDB();
+var game = { ban: null, revealed: [] };
+var activeTab = 'match';
+var manageTab = 'units';
+var selBuildUnit = null;
+
+/* ===================== 工具 ===================== */
+function $(id){ return document.getElementById(id); }
+function unit(id){ return DB.units.find(function(u){return u.id===id;}); }
+function shortName(u){ return (u.aliases && u.aliases[0]) || u.name; }
+function genId(){ return 'x' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function markOf(id){ return (DB.marks[id] && DB.marks[id].status) || ''; }
+function hasBuilds(id){ var b = DB.builds[id]; return !!b && b.length > 0; }
+
+function searchUnits(q, exclude){
+  q = (q||'').trim().toLowerCase();
+  if(!q) return [];
+  var ex = exclude || {};
+  return DB.units.filter(function(u){
+    if(ex[u.id]) return false;
+    if(u.name.toLowerCase().indexOf(q) >= 0) return true;
+    for(var i=0;i<u.aliases.length;i++) if(u.aliases[i].toLowerCase().indexOf(q) >= 0) return true;
+    if(u.py && u.py.indexOf(q) >= 0) return true;
+    return false;
+  });
+}
+
+/* ===================== 对局推荐 ===================== */
+function renderMatch(){
+  var el = $('tab-match');
+  var html = '';
+  html += '<div class="panel">';
+  html += '<div class="row">' +
+    '<span class="label">敌方ban了我方：</span>' +
+    '<span class="ban-btns" id="ban-btns"></span>' +
+  '</div>';
+  html += '<div class="row">' +
+    '<span class="label">敌方已亮式神：</span>' +
+    '<span class="chips" id="reveal-chips"></span>' +
+    '<span class="muted">（最多5个，点击移除）</span>' +
+  '</div>';
+  html += '<div class="row">' +
+    '<span class="search-wrap">' +
+      '<input id="search" placeholder="输入式神名/简称/拼音首字母，回车添加（Esc清空，Ctrl+N新对局）" autocomplete="off">' +
+      '<div id="suggest" class="suggest hidden"></div>' +
+    '</span>' +
+    '<span class="tools">' +
+      '<label style="cursor:pointer"><input type="checkbox" id="greenOnly"> 只显示全绿阵容</label>' +
+      '<button id="btn-newgame">新对局</button>' +
+    '</span>' +
+  '</div>';
+  html += '<div id="result"></div>';
+  html += '</div>';
+  el.innerHTML = html;
+
+  // ban 按钮
+  var bb = $('ban-btns');
+  var banUnits = ['gx','fyj','pjm'];
+  banUnits.forEach(function(id){
+    var u = unit(id);
+    var b = document.createElement('button');
+    b.textContent = u.name;
+    if(game.ban === id) b.className = 'on';
+    b.onclick = function(){ game.ban = id; renderMatch(); };
+    bb.appendChild(b);
+  });
+  var otherBtn = document.createElement('button');
+  otherBtn.textContent = '其他…';
+  if(game.ban && banUnits.indexOf(game.ban) < 0){
+    otherBtn.className = 'on';
+    otherBtn.textContent = '其他：' + shortName(unit(game.ban));
+  }
+  otherBtn.onclick = function(){
+    if(game.ban && banUnits.indexOf(game.ban) < 0){ game.ban = null; renderMatch(); return; }
+    // 打开其他ban输入
+    otherBtn.className = 'on';
+    otherBtn.textContent = '其他：输入…';
+    var inp = document.createElement('input');
+    inp.className = 'ban-other-in';
+    inp.placeholder = '输入式神…';
+    var list = document.createElement('div');
+    list.className = 'suggest';
+    bb.appendChild(inp);
+    document.body.appendChild(list);
+    function posList(){
+      var r = inp.getBoundingClientRect();
+      list.style.cssText = 'position:fixed;left:' + r.left + 'px;top:' + (r.bottom+4) + 'px;width:220px;';
+    }
+    function refresh(){
+      var items = searchUnits(inp.value);
+      list.innerHTML = '';
+      items.slice(0,8).forEach(function(u){
+        var d = document.createElement('div');
+        d.className = 'item';
+        d.innerHTML = '<span>' + esc(u.name) + '</span><span class="alias">' + esc(u.aliases.join(' ')) + '</span>';
+        d.onclick = function(){ game.ban = u.id; cleanup(); renderMatch(); };
+        list.appendChild(d);
+      });
+      if(items.length) posList(); else list.classList.add('hidden');
+    }
+    function cleanup(){ list.remove(); inp.remove(); document.removeEventListener('click', docClick); }
+    function docClick(e){ if(e.target !== inp && !list.contains(e.target)) cleanup(); }
+    inp.oninput = refresh;
+    inp.onkeydown = function(e){ if(e.key === 'Enter' && !list.classList.contains('hidden')){ var first = list.querySelector('.item'); if(first) first.click(); } if(e.key === 'Escape') cleanup(); };
+    document.addEventListener('click', docClick);
+    inp.focus();
+  };
+  bb.appendChild(otherBtn);
+
+  // 已亮 chips
+  var rc = $('reveal-chips');
+  rc.innerHTML = game.revealed.map(function(id){
+    var u = unit(id);
+    return '<span class="chip" title="' + esc(u.name) + '">' + esc(shortName(u)) + '<span class="x" data-del="' + id + '">×</span></span>';
+  }).join('') || '<span class="muted">等待亮牌…</span>';
+  rc.querySelectorAll('[data-del]').forEach(function(x){
+    x.onclick = function(){
+      game.revealed = game.revealed.filter(function(i){ return i !== x.dataset.del; });
+      renderMatch();
+    };
+  });
+
+  // 绿色过滤
+  var g = $('greenOnly');
+  g.checked = !!DB.settings.greenOnly;
+  g.onchange = function(){ DB.settings.greenOnly = g.checked; saveDB(); renderResult(); };
+
+  $('btn-newgame').onclick = function(){ game.ban = null; game.revealed = []; renderMatch(); };
+
+  renderResult();
+  bindSearch();
+  focusSearch();
+}
+
+function renderResult(){
+  var box = $('result');
+  if(!game.ban){
+    box.innerHTML = '<div class="noresult">请先选择「敌方ban了我方谁」</div>';
+    return;
+  }
+  var section = null;
+  DB.tree.sections.forEach(function(s){ if(s.ban === game.ban) section = s; });
+  if(!section){
+    var bu = unit(game.ban);
+    box.innerHTML = '<div class="banner err">思维导图未覆盖「敌方ban' + esc(bu.name) + '」——无对应分支。<br>若你琢磨出了应对，可到「数据管理 → 决策树」新增一个ban分支，下次直接可用。</div>';
+    return;
+  }
+  var html = '<div class="banner ok">大节：<b>' + esc(section.title || '（未命名）') + '</b> —— ' + esc(section.note || '') + '</div>';
+
+  var revealed = game.revealed;
+  var fulls = [], partials = [], manuals = [];
+  section.conditions.forEach(function(c){
+    if(!c.units || !c.units.length){ manuals.push(c); return; }
+    var overlap = c.units.filter(function(u){ return revealed.indexOf(u) >= 0; }).length;
+    if(overlap === c.units.length) fulls.push(c);
+    else if(overlap > 0) partials.push({c:c, overlap:overlap});
+  });
+  partials.sort(function(a,b){ return b.overlap - a.overlap; });
+
+  var greenOnly = DB.settings.greenOnly;
+  function condCard(c, extra){
+    var head = '<div class="cond-head"><span class="cname">敌方：' + esc(c.name || '（未命名）') + '</span>' +
+      (c.note ? '<span class="cnote">' + esc(c.note) + '</span>' : '') +
+      (extra ? extra : '') + '</div>';
+    var shown = 0;
+    var respHtml = c.responses.map(function(r){
+      var blocked = false;
+      r.units.forEach(function(id){ if(markOf(id) === 'red') blocked = true; });
+      if(greenOnly && blocked) return {blocked:true};
+      shown++;
+      var chips = r.units.map(function(id){ return unitChipHtml(id); }).join(' ');
+      var pickHtml = '';
+      if(r.pick && r.pick.length){
+        pickHtml = '<span class="pick-label">任选其一：</span>' + r.pick.map(function(id){ return unitChipHtml(id); }).join(' ');
+      }
+      var noteHtml = (r.note ? '<span class="rnote">' + esc(r.note) + '</span>' : '') +
+        (r.tags && r.tags.length ? r.tags.map(function(t){ return '<span class="rtag">' + esc(t) + '</span>'; }).join(' ') : '');
+      return {html: '<div class="resp' + (blocked && !greenOnly ? ' resp-blocked' : '') + '">' + chips + ' ' + pickHtml + ' ' + noteHtml + '</div>', blocked: blocked && !greenOnly};
+    });
+    var body = '';
+    var visible = 0, hiddenCount = 0;
+    respHtml.forEach(function(x){
+      if(x.blocked){ hiddenCount++; return; }
+      body += x.html; visible++;
+    });
+    if(greenOnly && hiddenCount > 0 && visible === 0){
+      body = '<div class="noresult">该条件下无全绿应对（' + hiddenCount + ' 套含红标已隐藏）</div>';
+    } else if(greenOnly && hiddenCount > 0){
+      body += '<div class="muted">另有 ' + hiddenCount + ' 套含红标已隐藏</div>';
+    }
+    return '<div class="cond-card">' + head + body + '</div>';
+  }
+
+  if(fulls.length){
+    html += '<div class="group-title">命中 <span class="count">' + fulls.length + '</span></div>';
+    fulls.forEach(function(c){ html += condCard(c); });
+  }
+  if(partials.length){
+    html += '<div class="group-title">候选（部分命中） <span class="count">' + partials.length + '</span></div>';
+    partials.forEach(function(p){
+      html += condCard(p.c, '<span class="progress">已亮 ' + p.overlap + '/' + p.c.units.length + '</span>');
+    });
+  }
+  if(manuals.length){
+    html += '<div class="group-title">需人工判断（无固定式神特征）</div>';
+    manuals.forEach(function(c){ html += condCard(c); });
+  }
+  if(!fulls.length && !partials.length){
+    if(revealed.length){
+      html += '<div class="banner warn">当前已亮式神未命中任何条件。<span class="details" id="show-all">展开本大节全部条件</span></div>';
+      html += '<div id="all-conds" class="hidden"></div>';
+    } else {
+      html += '<div class="noresult">等待敌方亮牌…（每亮一个输入一个，命中后自动推荐）</div>';
+    }
+  }
+  box.innerHTML = html;
+  bindChips();
+  var sa = $('show-all');
+  if(sa){
+    sa.onclick = function(){
+      var ac = $('all-conds');
+      ac.innerHTML = section.conditions.map(function(c){ return condCard(c); }).join('');
+      ac.classList.remove('hidden');
+      sa.classList.add('hidden');
+      bindChips();
+    };
+  }
+}
+
+function unitChipHtml(id){
+  var u = unit(id);
+  if(!u) return '';
+  var cls = 'chip';
+  if(!hasBuilds(id)) cls += ' mark-void';
+  else if(markOf(id) === 'green') cls += ' mark-green';
+  else if(markOf(id) === 'red') cls += ' mark-red';
+  else cls += ' mark-none';
+  var tip = u.name;
+  if(hasBuilds(id) && markOf(id)) tip += '（' + (markOf(id)==='green'?'达标':'不达标') + '）';
+  else if(!hasBuilds(id)) tip += '（无御魂要求）';
+  return '<span class="' + cls + '" data-unit="' + id + '" title="' + esc(tip) + '">' + esc(shortName(u)) + '</span>';
+}
+
+function bindChips(){
+  document.querySelectorAll('#result [data-unit]').forEach(function(ch){
+    ch.onclick = function(){ openUnitModal(ch.dataset.unit); };
+  });
+}
+
+/* ===================== 搜索输入 ===================== */
+var sugItems = [], sugIdx = 0;
+function bindSearch(){
+  var inp = $('search');
+  var sug = $('suggest');
+  function closeSug(){ sug.classList.add('hidden'); sugItems = []; }
+  function openSug(){
+    var q = inp.value;
+    var ex = {};
+    game.revealed.forEach(function(id){ ex[id] = 1; });
+    sugItems = searchUnits(q, ex).slice(0,8);
+    if(!sugItems.length){ closeSug(); return; }
+    sugIdx = 0;
+    sug.innerHTML = sugItems.map(function(u,i){
+      return '<div class="item' + (i===0?' sel':'') + '" data-i="' + i + '"><span>' + esc(u.name) + '</span><span class="alias">' + esc(u.aliases.join(' ')) + '</span></div>';
+    }).join('');
+    sug.classList.remove('hidden');
+    sug.querySelectorAll('.item').forEach(function(it){
+      it.onmousedown = function(e){ e.preventDefault(); pickReveal(sugItems[+it.dataset.i]); };
+      it.onmouseenter = function(){ sugIdx = +it.dataset.i; paintSug(); };
+    });
+  }
+  function paintSug(){
+    sug.querySelectorAll('.item').forEach(function(it){
+      it.classList.toggle('sel', +it.dataset.i === sugIdx);
+    });
+  }
+  function pickReveal(u){
+    if(game.revealed.indexOf(u.id) >= 0) return;
+    if(game.revealed.length >= 5) return;
+    game.revealed.push(u.id);
+    inp.value = '';
+    closeSug();
+    renderMatch();
+  }
+  inp.oninput = openSug;
+  inp.onkeydown = function(e){
+    if(e.key === 'Escape'){ closeSug(); game.revealed = []; renderMatch(); return; }
+    if(e.key === 'ArrowDown'){ if(!sug.classList.contains('hidden')){ sugIdx = Math.min(sugIdx+1, sugItems.length-1); paintSug(); e.preventDefault(); } return; }
+    if(e.key === 'ArrowUp'){ if(!sug.classList.contains('hidden')){ sugIdx = Math.max(sugIdx-1, 0); paintSug(); e.preventDefault(); } return; }
+    if(e.key === 'Backspace' && !inp.value && game.revealed.length){ game.revealed.pop(); renderMatch(); return; }
+    if(e.key === 'Enter'){
+      if(!sug.classList.contains('hidden')){ pickReveal(sugItems[sugIdx]); return; }
+      var ex = {};
+      game.revealed.forEach(function(id){ ex[id] = 1; });
+      var m = searchUnits(inp.value, ex);
+      if(m.length === 1){ pickReveal(m[0]); }
+      else if(m.length > 1){ openSug(); }
+    }
+  };
+  document.addEventListener('keydown', function(e){
+    if((e.ctrlKey || e.metaKey) && (e.key === 'n' || e.key === 'N')){
+      e.preventDefault();
+      game.ban = null; game.revealed = [];
+      renderMatch();
+    }
+  });
+}
+function focusSearch(){
+  var inp = $('search');
+  if(inp){ inp.focus(); }
+}
+
+/* ===================== 弹窗 ===================== */
+function openUnitModal(id){
+  var u = unit(id);
+  var ov = $('modal-overlay');
+  var box = $('modal-box');
+  var builds = DB.builds[id] || [];
+  var mark = DB.marks[id] || {status:'', note:''};
+  var html = '<h3>' + esc(u.name) + '</h3>';
+  html += '<div class="aliases">别名：' + esc(u.aliases.join('、') || '无') + '</div>';
+  if(builds.length){
+    builds.forEach(function(b){
+      html += '<div class="build-item">' +
+        (b.copy ? '<span class="b-copy">' + esc(b.copy) + '</span>' : '') +
+        '<div class="b-line"><b>御魂：</b>' + esc(b.souls || '—') + '</div>' +
+        (b.attrs ? '<div class="b-line"><b>2/4/6位：</b>' + esc(b.attrs) + '</div>' : '') +
+        (b.targets ? '<div class="b-line"><b>指标/速度：</b>' + esc(b.targets) + '</div>' : '') +
+        (b.note ? '<div class="b-line"><b>备注：</b>' + esc(b.note) + '</div>' : '') +
+        '</div>';
+    });
+  } else {
+    html += '<div class="nobuild">无御魂要求（我方ban位/敌方单位/临时上阵）</div>';
+  }
+  html += '<div class="modal-actions">' +
+    '<button class="' + (mark.status===''?'': '') + ' on-grey">未标记</button>' +
+    '<button class="on-green">绿：达标</button>' +
+    '<button class="on-red">红：不达标</button>' +
+    '</div>';
+  html += '<input class="mark-note" id="modal-note" placeholder="标记备注（可留空）" value="' + esc(mark.note) + '">';
+  html += '<div class="modal-actions"><button id="modal-close">关闭</button></div>';
+  box.innerHTML = html;
+  ov.classList.remove('hidden');
+  $('modal-close').onclick = function(){ ov.classList.add('hidden'); };
+  ov.onclick = function(e){ if(e.target === ov) ov.classList.add('hidden'); };
+  box.querySelector('.on-green').onclick = function(){ setMark(id, 'green'); ov.classList.add('hidden'); renderMatch(); };
+  box.querySelector('.on-red').onclick = function(){ setMark(id, 'red'); ov.classList.add('hidden'); renderMatch(); };
+  box.querySelector('.on-grey').onclick = function(){ setMark(id, ''); ov.classList.add('hidden'); renderMatch(); };
+  $('modal-note').onchange = function(){
+    if(!DB.marks[id]) DB.marks[id] = {status:'', note:''};
+    DB.marks[id].note = this.value;
+    saveDB();
+  };
+}
+function setMark(id, status){
+  if(!DB.marks[id]) DB.marks[id] = {status:'', note:''};
+  DB.marks[id].status = status;
+  saveDB();
+}
+
+/* ===================== 管理页 ===================== */
+function renderManage(){
+  var el = $('tab-manage');
+  var subs = [['units','式神清单'],['builds','御魂要求'],['marks','红绿标记'],['tree','决策树'],['backup','备份备忘']];
+  var html = '<div class="subtabs">' + subs.map(function(s){
+    return '<button class="' + (manageTab===s[0]?'active':'') + '" data-mt="' + s[0] + '">' + s[1] + '</button>';
+  }).join('') + '</div><div id="manage-body"></div>';
+  el.innerHTML = html;
+  el.querySelectorAll('[data-mt]').forEach(function(b){
+    b.onclick = function(){ manageTab = b.dataset.mt; renderManage(); };
+  });
+  var body = $('manage-body');
+  if(manageTab === 'units') renderUnits(body);
+  else if(manageTab === 'builds') renderBuilds(body);
+  else if(manageTab === 'marks') renderMarks(body);
+  else if(manageTab === 'tree') renderTree(body);
+  else if(manageTab === 'backup') renderBackup(body);
+}
+
+function renderUnits(body){
+  var html = '<div class="hint-box">编辑后点击别处即自动保存。别名用顿号分隔，拼音为搜索用首字母（如 封阳君=fyj）。</div>';
+  html += '<table class="grid"><tr><th style="width:22%">全名</th><th style="width:32%">别名</th><th style="width:14%">拼音</th><th style="width:8%"></th></tr>';
+  DB.units.forEach(function(u){
+    html += '<tr>' +
+      '<td><input type="text" data-f="name" data-id="' + u.id + '" value="' + esc(u.name) + '"></td>' +
+      '<td><input type="text" data-f="aliases" data-id="' + u.id + '" value="' + esc(u.aliases.join('、')) + '"></td>' +
+      '<td><input type="text" data-f="py" data-id="' + u.id + '" value="' + esc(u.py) + '"></td>' +
+      '<td><button class="btn sm danger" data-del="' + u.id + '">删除</button></td>' +
+    '</tr>';
+  });
+  html += '</table>';
+  html += '<div class="row"><button class="btn" id="add-unit">+ 新增式神</button></div>';
+  body.innerHTML = html;
+  body.querySelectorAll('input[data-f]').forEach(function(inp){
+    inp.onchange = function(){
+      var u = unit(inp.dataset.id);
+      if(!u) return;
+      if(inp.dataset.f === 'name') u.name = inp.value;
+      else if(inp.dataset.f === 'py') u.py = inp.value;
+      else if(inp.dataset.f === 'aliases') u.aliases = inp.value.split(/[、,，]/).map(function(s){return s.trim();}).filter(Boolean);
+      saveDB();
+    };
+  });
+  body.querySelectorAll('[data-del]').forEach(function(b){
+    b.onclick = function(){
+      if(!confirm('删除这个式神？（不影响决策树中已有的引用，但会显示为未知）')) return;
+      DB.units = DB.units.filter(function(u){ return u.id !== b.dataset.del; });
+      saveDB(); renderManage();
+    };
+  });
+  $('add-unit').onclick = function(){
+    var id = genId();
+    DB.units.push({id:id, name:'新式神', aliases:[], py:''});
+    saveDB(); renderManage();
+    var inp = body.querySelector('input[data-id="' + id + '"][data-f="name"]');
+    if(inp){ inp.focus(); inp.select(); }
+  };
+}
+
+function renderBuilds(body){
+  var unitsWithB = DB.units.filter(function(u){ return hasBuilds(u.id); });
+  var html = '<div class="hint-box">换阵容流程：先在这里重输各式神御魂要求，然后到「红绿标记」页一键清空全部标记，重新逐式神标红绿。编辑后点击别处即自动保存。</div>';
+  html += '<div class="row"><span class="label">选择式神：</span><span class="unit-pick" id="build-pick"></span></div>';
+  html += '<div id="build-editor"></div>';
+  body.innerHTML = html;
+  var pick = $('build-pick');
+  pick.innerHTML = unitsWithB.map(function(u){
+    return '<button class="' + (selBuildUnit===u.id?'on':'') + '" data-id="' + u.id + '">' + esc(u.name) + '</button>';
+  }).join('');
+  pick.querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){ selBuildUnit = b.dataset.id; renderManage(); };
+  });
+  if(!selBuildUnit || !hasBuilds(selBuildUnit)) selBuildUnit = unitsWithB.length ? unitsWithB[0].id : null;
+  var ed = $('build-editor');
+  if(!selBuildUnit){ ed.innerHTML = '<div class="noresult">没有配置御魂的式神（葛叶等摆位式神无需配置）</div>'; return; }
+  var u = unit(selBuildUnit);
+  var builds = DB.builds[selBuildUnit];
+  var html2 = '<h3 style="margin:10px 0 6px">' + esc(u.name) + '</h3>';
+  builds.forEach(function(b, i){
+    html2 += '<div class="tree-resp">' +
+      '<div class="resp-line">' +
+      '<input data-i="' + i + '" data-f="copy" placeholder="号机/版本（如 2号机）" style="width:150px" value="' + esc(b.copy) + '">' +
+      '<input data-i="' + i + '" data-f="souls" placeholder="御魂套装" style="width:220px" value="' + esc(b.souls) + '">' +
+      '<button class="btn sm danger" data-delb="' + i + '">删除</button>' +
+      '</div>' +
+      '<div class="resp-line">' +
+      '<input data-i="' + i + '" data-f="attrs" placeholder="2/4/6位（如 速命生）" style="width:220px" value="' + esc(b.attrs) + '">' +
+      '<input data-i="' + i + '" data-f="targets" placeholder="指标/速度（如 速度>157）" style="width:260px" value="' + esc(b.targets) + '">' +
+      '</div>' +
+      '<div class="resp-line">' +
+      '<input data-i="' + i + '" data-f="note" placeholder="备注" style="width:100%" value="' + esc(b.note) + '">' +
+      '</div>' +
+    '</div>';
+  });
+  html2 += '<div class="row"><button class="btn" id="add-build">+ 新增一套配置</button></div>';
+  ed.innerHTML = html2;
+  ed.querySelectorAll('input[data-f]').forEach(function(inp){
+    inp.onchange = function(){
+      var b = builds[+inp.dataset.i];
+      if(!b) return;
+      b[inp.dataset.f] = inp.value;
+      saveDB();
+    };
+  });
+  ed.querySelectorAll('[data-delb]').forEach(function(b){
+    b.onclick = function(){ builds.splice(+b.dataset.delb, 1); saveDB(); renderManage(); };
+  });
+  $('add-build').onclick = function(){
+    builds.push({copy:'', souls:'', attrs:'', targets:'', note:''});
+    saveDB(); renderManage();
+  };
+}
+
+function renderMarks(body){
+  var html = '<div class="hint-box">绿色=御魂达标，红色=不达标。对局推荐页点式神也能直接标。换阵容后请用下方按钮清空全部标记重新标。</div>';
+  html += '<table class="grid"><tr><th style="width:24%">式神</th><th style="width:30%">标记</th><th>备注</th></tr>';
+  DB.units.forEach(function(u){
+    var m = DB.marks[u.id] || {status:'', note:''};
+    html += '<tr>' +
+      '<td>' + esc(u.name) + (hasBuilds(u.id) ? '' : ' <span class="muted">(无御魂要求)</span>') + '</td>' +
+      '<td>' +
+        '<button class="stat-btn ' + (m.status===''?'sel-grey':'') + '" data-mk="' + u.id + '" data-st="">灰</button> ' +
+        '<button class="stat-btn ' + (m.status==='green'?'sel-green':'') + '" data-mk="' + u.id + '" data-st="green">绿</button> ' +
+        '<button class="stat-btn ' + (m.status==='red'?'sel-red':'') + '" data-mk="' + u.id + '" data-st="red">红</button>' +
+      '</td>' +
+      '<td><input class="mark-note-in" data-mknote="' + u.id + '" value="' + esc(m.note) + '" placeholder="备注"></td>' +
+    '</tr>';
+  });
+  html += '</table>';
+  html += '<div class="row"><button class="btn danger" id="clear-marks">一键清空全部红绿标记</button></div>';
+  body.innerHTML = html;
+  body.querySelectorAll('[data-mk]').forEach(function(b){
+    b.onclick = function(){ setMark(b.dataset.mk, b.dataset.st); renderManage(); };
+  });
+  body.querySelectorAll('[data-mknote]').forEach(function(inp){
+    inp.onchange = function(){
+      if(!DB.marks[inp.dataset.mknote]) DB.marks[inp.dataset.mknote] = {status:'', note:''};
+      DB.marks[inp.dataset.mknote].note = inp.value;
+      saveDB();
+    };
+  });
+  $('clear-marks').onclick = function(){
+    if(!confirm('清空全部红绿标记？（换阵容后重新标）')) return;
+    DB.marks = {};
+    saveDB(); renderManage();
+  };
+}
+
+/* ---- 决策树编辑器 ---- */
+function renderTree(body){
+  var html = '<div class="hint-box">大节 = 敌方ban了我方谁；条件 = 敌方阵容特征；应对 = 我方上阵。临场琢磨出的新对策可随时补入。「条件」式神留空表示无法自动匹配（如挖土），会归入「需人工判断」。</div>';
+  html += '<div class="row"><button class="btn primary" id="add-section">+ 新增大节（ban分支）</button></div>';
+  DB.tree.sections.forEach(function(s){
+    var banU = unit(s.ban);
+    html += '<div class="tree-sec">';
+    html += '<div class="sec-head">' +
+      '<span class="label">敌方ban：</span>' +
+      '<select data-sec="' + s.id + '" data-f="ban">' +
+        DB.units.map(function(u){ return '<option value="' + u.id + '"' + (s.ban===u.id?' selected':'') + '>' + esc(u.name) + '</option>'; }).join('') +
+      '</select>' +
+      '<input data-sec="' + s.id + '" data-f="title" placeholder="大节标题（如 打ban封）" style="width:180px" value="' + esc(s.title) + '">' +
+      '<input data-sec="' + s.id + '" data-f="note" placeholder="备注（如 基本要掏云熊）" style="width:280px" value="' + esc(s.note) + '">' +
+      '<button class="btn sm danger" data-delsec="' + s.id + '">删除大节</button>' +
+    '</div>';
+    s.conditions.forEach(function(c){
+      html += '<div class="tree-cond">';
+      html += '<div class="cond-head2">' +
+        '<input data-cond="' + c.id + '" data-f="name" placeholder="条件名（如 云熊）" style="width:130px" value="' + esc(c.name) + '">' +
+        '<span class="label">敌方特征式神：</span>' +
+        '<span class="chipfield" data-cf="cond:' + c.id + '"></span>' +
+        '<input data-cond="' + c.id + '" data-f="note" placeholder="条件备注" style="width:260px" value="' + esc(c.note) + '">' +
+        '<button class="btn sm danger" data-delcond="' + c.id + '">删除条件</button>' +
+      '</div>';
+      c.responses.forEach(function(r){
+        html += '<div class="tree-resp">';
+        html += '<div class="resp-line">' +
+          '<span class="label">我方：</span>' +
+          '<span class="chipfield" data-cf="resp:' + r.id + ':units"></span>' +
+          '<span class="label">任选：</span>' +
+          '<span class="chipfield" data-cf="resp:' + r.id + ':pick"></span>' +
+        '</div>';
+        html += '<div class="resp-line">' +
+          '<input data-resp="' + r.id + '" data-f="note" placeholder="应对备注（如 摆烂打法）" style="width:220px" value="' + esc(r.note) + '">' +
+          '<input data-resp="' + r.id + '" data-f="tags" placeholder="标签，顿号分隔" style="width:180px" value="' + esc((r.tags||[]).join('、')) + '">' +
+          '<button class="btn sm danger" data-delresp="' + r.id + '">删除应对</button>' +
+        '</div>';
+        html += '</div>';
+      });
+      html += '<div class="resp-line"><button class="btn sm" data-addresp="' + c.id + '">+ 新增应对</button></div>';
+      html += '</div>';
+    });
+    html += '<div class="row"><button class="btn sm" data-addcond="' + s.id + '">+ 新增条件</button></div>';
+    html += '</div>';
+  });
+  html += '<div class="row"><button class="btn primary" id="add-section2">+ 新增大节（ban分支）</button></div>';
+  body.innerHTML = html;
+
+  // 结构操作
+  body.querySelectorAll('[data-addresp]').forEach(function(b){
+    b.onclick = function(){
+      findCond(b.dataset.addresp).responses.push({id:genId(), units:[], pick:[], note:'', tags:[]});
+      saveDB(); renderManage();
+    };
+  });
+  body.querySelectorAll('[data-addcond]').forEach(function(b){
+    b.onclick = function(){
+      findSection(b.dataset.addcond).conditions.push({id:genId(), name:'', units:[], note:'', responses:[]});
+      saveDB(); renderManage();
+    };
+  });
+  body.querySelectorAll('[data-delsec]').forEach(function(b){
+    b.onclick = function(){
+      if(!confirm('删除这个大节及其全部条件？')) return;
+      DB.tree.sections = DB.tree.sections.filter(function(s){ return s.id !== b.dataset.delsec; });
+      saveDB(); renderManage();
+    };
+  });
+  body.querySelectorAll('[data-delcond]').forEach(function(b){
+    b.onclick = function(){
+      if(!confirm('删除这个条件及其全部应对？')) return;
+      findSectionOfCond(b.dataset.delcond).conditions = findSectionOfCond(b.dataset.delcond).conditions.filter(function(c){ return c.id !== b.dataset.delcond; });
+      saveDB(); renderManage();
+    };
+  });
+  body.querySelectorAll('[data-delresp]').forEach(function(b){
+    b.onclick = function(){
+      findCondOfResp(b.dataset.delresp).responses = findCondOfResp(b.dataset.delresp).responses.filter(function(r){ return r.id !== b.dataset.delresp; });
+      saveDB(); renderManage();
+    };
+  });
+  [ $('add-section'), $('add-section2') ].forEach(function(b){
+    if(b) b.onclick = function(){
+      DB.tree.sections.push({id:genId(), ban:'gx', title:'', note:'', conditions:[]});
+      saveDB(); renderManage();
+    };
+  });
+
+  // 文本字段（blur 保存）
+  body.querySelectorAll('select[data-f="ban"]').forEach(function(sel){
+    sel.onchange = function(){ findSection(sel.dataset.sec).ban = sel.value; saveDB(); };
+  });
+  body.querySelectorAll('input[data-sec]').forEach(function(inp){
+    inp.onchange = function(){ findSection(inp.dataset.sec)[inp.dataset.f] = inp.value; saveDB(); };
+  });
+  body.querySelectorAll('input[data-cond]').forEach(function(inp){
+    inp.onchange = function(){ findCond(inp.dataset.cond)[inp.dataset.f] = inp.value; saveDB(); };
+  });
+  body.querySelectorAll('input[data-resp]').forEach(function(inp){
+    inp.onchange = function(){
+      var r = findResp(inp.dataset.resp);
+      if(inp.dataset.f === 'tags') r.tags = inp.value.split(/[、,，]/).map(function(s){return s.trim();}).filter(Boolean);
+      else r[inp.dataset.f] = inp.value;
+      saveDB();
+    };
+  });
+
+  // chip 字段
+  body.querySelectorAll('[data-cf]').forEach(function(span){
+    makeChipField(span, function(){
+      var parts = span.dataset.cf.split(':');
+      if(parts[0] === 'cond'){ var c = findCond(parts[1]); return {get:function(){return c.units;}, set:function(v){c.units=v;}}; }
+      else { var r = findResp(parts[1]); var f = parts[2]; return {get:function(){return r[f];}, set:function(v){r[f]=v;}}; }
+    });
+  });
+}
+
+function findSection(id){ return DB.tree.sections.find(function(s){ return s.id===id; }); }
+function findSectionOfCond(cid){
+  for(var i=0;i<DB.tree.sections.length;i++){
+    var s = DB.tree.sections[i];
+    for(var j=0;j<s.conditions.length;j++) if(s.conditions[j].id===cid) return s;
+  }
+  return null;
+}
+function findCond(cid){ var s = findSectionOfCond(cid); return s ? s.conditions.find(function(c){return c.id===cid;}) : null; }
+function findCondOfResp(rid){
+  for(var i=0;i<DB.tree.sections.length;i++){
+    var s = DB.tree.sections[i];
+    for(var j=0;j<s.conditions.length;j++){
+      var c = s.conditions[j];
+      for(var k=0;k<c.responses.length;k++) if(c.responses[k].id===rid) return c;
+    }
+  }
+  return null;
+}
+function findResp(rid){
+  var c = findCondOfResp(rid);
+  return c ? c.responses.find(function(r){return r.id===rid;}) : null;
+}
+
+/* 通用 chip 多选组件（管理页用） */
+function makeChipField(span, accessor){
+  var state = accessor();
+  function paint(){
+    var ids = state.get();
+    span.innerHTML = ids.map(function(id){
+      var u = unit(id);
+      return '<span class="chip">' + esc(u ? shortName(u) : '?') + '<span class="x" data-x="' + id + '">×</span></span>';
+    }).join('') + '<span class="cf-wrap"><button class="add-btn">+</button></span>';
+    span.querySelectorAll('[data-x]').forEach(function(x){
+      x.onclick = function(){
+        state.set(ids.filter(function(i){ return i !== x.dataset.x; }));
+        saveDB(); paint();
+      };
+    });
+    span.querySelector('.add-btn').onclick = function(e){
+      e.stopPropagation();
+      var wrap = span.querySelector('.cf-wrap');
+      wrap.innerHTML = '<input class="cf-in" placeholder="搜索式神…"><div class="cf-list hidden"></div>';
+      var inp = wrap.querySelector('.cf-in');
+      var list = wrap.querySelector('.cf-list');
+      function refresh(){
+        var q = searchUnits(inp.value);
+        list.innerHTML = '';
+        q.slice(0,8).forEach(function(u){
+          var d = document.createElement('div');
+          d.className = 'item';
+          d.innerHTML = '<span>' + esc(u.name) + '</span><span class="alias">' + esc(u.aliases.join(' ')) + '</span>';
+          d.onmousedown = function(e){
+            e.preventDefault();
+            var cur = state.get();
+            if(cur.indexOf(u.id) < 0){ cur = cur.slice(); cur.push(u.id); state.set(cur); }
+            saveDB(); paint();
+          };
+          list.appendChild(d);
+        });
+        list.classList.toggle('hidden', !q.length);
+      }
+      inp.oninput = refresh;
+      inp.onkeydown = function(e){
+        if(e.key === 'Enter' && !list.classList.contains('hidden')){ var first = list.querySelector('.item'); if(first) first.dispatchEvent(new MouseEvent('mousedown')); }
+        if(e.key === 'Escape'){ paint(); }
+      };
+      inp.focus();
+    };
+  }
+  paint();
+}
+
+function renderBackup(body){
+  var html = '<div class="hint-box">数据全部保存在本浏览器 localStorage 中，不会上传任何地方。建议每次版本更新、改完数据后导出一份备份。</div>';
+  html += '<div class="row"><span class="label">体系备忘：</span></div>';
+  html += '<textarea class="memo" id="memo">' + esc(DB.meta.memo) + '</textarea>';
+  html += '<div class="row">' +
+    '<button class="btn primary" id="btn-export">导出备份 JSON</button>' +
+    '<label class="btn" style="cursor:pointer">导入备份 JSON<input type="file" id="file-import" accept=".json" class="hidden"></label>' +
+    '<button class="btn danger" id="btn-reset">重置为初始数据</button>' +
+  '</div>';
+  html += '<div class="row muted">策略：' + esc(DB.meta.strategy) + ' ｜ 数据版本：' + DB.v + ' ｜ 更新于：' + esc(DB.meta.updated) + '</div>';
+  body.innerHTML = html;
+  var memoDeb = null;
+  $('memo').oninput = function(){
+    clearTimeout(memoDeb);
+    var v = this.value;
+    memoDeb = setTimeout(function(){ DB.meta.memo = v; DB.meta.updated = new Date().toISOString().slice(0,10); saveDB(); }, 400);
+  };
+  $('btn-export').onclick = function(){
+    var blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '斗技助手备份_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+  };
+  $('file-import').onchange = function(){
+    var f = this.files[0];
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      try{
+        var d = JSON.parse(rd.result);
+        if(!d || d.v !== 1 || !d.tree || !d.units){ alert('备份文件格式不对'); return; }
+        DB = d;
+        saveDB();
+        game.ban = null; game.revealed = [];
+        renderAll();
+        alert('导入成功');
+      }catch(e){ alert('导入失败：' + e.message); }
+    };
+    rd.readAsText(f);
+  };
+  $('btn-reset').onclick = function(){
+    if(!confirm('重置为初始数据？当前所有编辑（含红绿标记、自定义分支）都会丢失。建议先导出备份。')) return;
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  };
+}
+
+/* ===================== 主体 ===================== */
+function renderAll(){
+  if(activeTab === 'match'){ renderMatch(); }
+  else { renderManage(); }
+}
+document.querySelectorAll('header .tabs button').forEach(function(b){
+  b.onclick = function(){
+    activeTab = b.dataset.tab;
+    document.querySelectorAll('header .tabs button').forEach(function(x){ x.classList.toggle('active', x === b); });
+    $('tab-match').classList.toggle('hidden', activeTab !== 'match');
+    $('tab-manage').classList.toggle('hidden', activeTab !== 'manage');
+    renderAll();
+  };
+});
+// 对局页点击空白处自动聚焦搜索框
+document.addEventListener('click', function(e){
+  if(activeTab !== 'match') return;
+  var t = e.target;
+  if(t.closest && (t.closest('#search') || t.closest('#suggest') || t.closest('#modal-overlay') || t.closest('.ban-other-in'))) return;
+  focusSearch();
+});
+renderAll();
+</script>
+</body>
+</html>
